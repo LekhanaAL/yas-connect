@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../src/app/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 
 interface AuthFormProps {
