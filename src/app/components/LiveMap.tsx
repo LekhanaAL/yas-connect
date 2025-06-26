@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { supabase } from '../src/app/lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
@@ -68,11 +68,11 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
         return;
       }
 
-      // Create blue circular dot
+      // Create marker: violet for current user, blue for others
       const el = document.createElement('div');
       el.style.width = '10px';
       el.style.height = '10px';
-      el.style.backgroundColor = 'blue';
+      el.style.backgroundColor = (currentUser && u.user_id === currentUser.id) ? 'violet' : 'blue';
       el.style.borderRadius = '50%';
       el.style.border = '2px solid white';
 
