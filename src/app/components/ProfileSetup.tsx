@@ -12,8 +12,6 @@ interface ProfileSetupProps {
 export default function ProfileSetup({ user, onComplete }: ProfileSetupProps) {
   const [form, setForm] = useState({ name: '', lesson_number: '' });
   const [error, setError] = useState('');
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -22,44 +20,16 @@ export default function ProfileSetup({ user, onComplete }: ProfileSetupProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setAvatarFile(e.target.files[0]);
-      setAvatarPreview(URL.createObjectURL(e.target.files[0]));
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     setSuccess(false);
-    let avatar_url = '';
-    let fileToUpload = avatarFile;
-    if (avatarFile) {
-      // Compress image before upload
-      try {
-        fileToUpload = await imageCompression(avatarFile, { maxSizeMB: 0.2, maxWidthOrHeight: 256 });
-      } catch (err) {
-        setError('Image compression failed');
-        setLoading(false);
-        return;
-      }
-      const filePath = `${user.id}/${fileToUpload.name}`;
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, fileToUpload, { upsert: true });
-      if (uploadError) {
-        setError(uploadError.message);
-        setLoading(false);
-        return;
-      }
-      const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      avatar_url = publicUrlData?.publicUrl || '';
-    }
     const { error: upsertError } = await supabase.from('profiles').upsert({
       id: user.id,
+      email: user.email,
       name: form.name,
       lesson_number: form.lesson_number,
-      avatar_url,
     });
     setLoading(false);
     if (upsertError) {
@@ -75,17 +45,8 @@ export default function ProfileSetup({ user, onComplete }: ProfileSetupProps) {
       <h2 style={{ textAlign: 'center', color: '#1A2A4F', marginBottom: 8 }}>Complete Your Profile</h2>
       <input name="name" placeholder="Name" value={form.name} onChange={e => setForm({ ...form, [e.target.name]: e.target.value })} required style={inputStyle} aria-label="Name" />
       <input name="lesson_number" placeholder="Lesson Number" value={form.lesson_number} onChange={e => setForm({ ...form, [e.target.name]: e.target.value })} required style={inputStyle} aria-label="Lesson Number" />
-      <input type="file" accept="image/*" onChange={handleFileChange} style={inputStyle} aria-label="Upload avatar" />
-      {avatarPreview && (
-        <img
-          src={avatarPreview}
-          alt="Avatar Preview"
-          style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', margin: '0 auto', border: '2px solid #FFD600', boxShadow: '0 2px 8px #FFD60044' }}
-          onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/default-avatar.png'; }}
-        />
-      )}
       <div aria-live="polite" style={{ minHeight: 32, margin: '8px 0' }}>
-        {loading && <div className="loader" style={{ margin: '0 auto', display: 'block' }} aria-label="Uploading..." />}
+        {loading && <div className="loader" style={{ margin: '0 auto', display: 'block' }} aria-label="Saving..." />}
         {success && (
           <div style={{ color: 'green', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <span aria-hidden="true">✅</span> <span>Profile saved!</span>

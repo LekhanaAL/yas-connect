@@ -24,22 +24,18 @@ interface UserLocation {
   profiles: {
     name: string | null;
     lesson_number: string | null;
-    avatar_url: string | null;
   }[] | null;
 }
 
-function createMarkerElement(avatarUrl: string, isCurrentUser: boolean) {
-  const el = document.createElement('div');
-  el.style.width = '54px';
-  el.style.height = '54px';
-  el.style.borderRadius = '50%';
-  el.style.overflow = 'hidden';
-  el.style.border = `3px solid ${isCurrentUser ? SRF_COLORS.gold : SRF_COLORS.white}`;
-  el.style.boxShadow = '0 0 8px #0003';
-  el.style.background = SRF_COLORS.white;
-  el.style.cursor = 'pointer';
-  el.innerHTML = `<img src="${avatarUrl || '/default-avatar.png'}" onerror="this.onerror=null;this.src='/default-avatar.png';" style="width:100%;height:100%;object-fit:cover;" alt="User avatar" />`;
-  return el;
+function createMarkerElement() {
+  const dot = document.createElement('div');
+  dot.style.width = '16px';
+  dot.style.height = '16px';
+  dot.style.borderRadius = '50%';
+  dot.style.background = SRF_COLORS.blue;
+  dot.style.border = `2px solid #fff`;
+  dot.style.boxShadow = '0 0 8px #0003';
+  return dot;
 }
 
 function createPopupHTML(name: string | null, lesson_number: string | null) {
@@ -73,7 +69,7 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
   useEffect(() => {
     setLoading(true);
     const fetchUsers = async () => {
-      const { data, error } = await supabase.from('locations').select('user_id,latitude,longitude,updated_at,profiles(name,lesson_number,avatar_url)');
+      const { data, error } = await supabase.from('locations').select('user_id,latitude,longitude,updated_at,profiles(name,lesson_number)');
       if (error) {
         console.error("Error fetching locations:", error);
         setUsers([]);
@@ -94,21 +90,42 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
     if (!mapRef.current || !mapContainer.current) return;
     const map = mapRef.current;
 
-    // A simple way to manage markers without attaching to the map instance
-    const markers: mapboxgl.Marker[] = [];
+    let markers: mapboxgl.Marker[] = [];
 
+    console.log('All users:', users);
     users.forEach((u) => {
-      if (!u.latitude || !u.longitude) return;
-      const el = createMarkerElement(u.profiles?.[0]?.avatar_url || '', u.user_id === currentUser?.id);
+      if (!u || typeof u.latitude !== 'number' || typeof u.longitude !== 'number') {
+        console.warn('Invalid user location, skipping:', u);
+        return;
+      }
+
+      // Create blue circular dot
+      const el = document.createElement('div');
+      el.style.width = '10px';
+      el.style.height = '10px';
+      el.style.backgroundColor = 'blue';
+      el.style.borderRadius = '50%';
+      el.style.border = '2px solid white';
+
+      const name = u.profiles?.[0]?.name || "User";
+      const type = u.profiles?.[0]?.lesson_number || "N";
+
       const popup = new mapboxgl.Popup({ offset: 18 })
-        .setHTML(createPopupHTML(u.profiles?.[0]?.name || 'User', u.profiles?.[0]?.lesson_number || 'N/A'));
-      const marker = new mapboxgl.Marker(el).setLngLat([u.longitude, u.latitude]).setPopup(popup).addTo(map);
-      markers.push(marker);
+        .setHTML(`<strong>${name}</strong><br>${type}`);
+
+      try {
+        new mapboxgl.Marker({ element: el })
+          .setLngLat([u.longitude, u.latitude])
+          .setPopup(popup)
+          .addTo(map);
+      } catch (err) {
+        console.error('Error adding marker:', err);
+      }
     });
 
-    // Clean up markers on unmount or when users change
     return () => {
       markers.forEach(marker => marker.remove());
+      markers = [];
     };
   }, [users, currentUser]);
 
