@@ -22,6 +22,7 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (!mapContainer.current) return;
     if (mapRef.current) return;
     mapRef.current = new mapboxgl.Map({
@@ -83,10 +84,11 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
         .setHTML(`<strong>${name}</strong><br>${type}`);
 
       try {
-        new mapboxgl.Marker({ element: el })
+        const marker = new mapboxgl.Marker({ element: el })
           .setLngLat([u.longitude, u.latitude])
           .setPopup(popup)
           .addTo(map);
+        markers.push(marker);
       } catch (err) {
         console.error('Error adding marker:', err);
       }
