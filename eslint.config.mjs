@@ -10,7 +10,9 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  // Use 'next' as the recommended base config for Next.js projects.
+  // For stricter rules, you can use 'next/core-web-vitals' instead.
+  ...compat.extends("next"),
 ];
 
 export default eslintConfig;
