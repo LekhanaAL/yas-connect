@@ -66,7 +66,7 @@ export default function AuthForm({ onAuth }: AuthFormProps) {
           style={{ background: '#4285F4', color: '#fff', padding: 12, borderRadius: 8, border: 'none', marginTop: 8, cursor: 'pointer', fontWeight: 700, fontSize: 16 }}
           onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
         >
-          Sign in with Google
+          Sign up / Sign in with Google
         </button>
       </form>
     </div>
