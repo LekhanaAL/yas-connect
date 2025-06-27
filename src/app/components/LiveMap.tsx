@@ -12,6 +12,7 @@ interface UserLocation {
   profiles: {
     name: string | null;
     lesson_number: string | null;
+    avatar_url?: string;
   }[] | null;
 }
 
@@ -27,7 +28,7 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
     if (mapRef.current) return;
     mapRef.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: 'mapbox://styles/mapbox/streets-v11',
       center: [78, 22],
       zoom: 2.2,
       attributionControl: false,
@@ -39,7 +40,7 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
   useEffect(() => {
     setLoading(true);
     const fetchUsers = async () => {
-      const { data, error } = await supabase.from('locations').select('user_id,latitude,longitude,updated_at,profiles(name,lesson_number)');
+      const { data, error } = await supabase.from('locations').select('user_id,latitude,longitude,updated_at,profiles(name,lesson_number,avatar_url)');
       if (error) {
         console.error("Error fetching locations:", error);
         setUsers([]);
@@ -69,13 +70,33 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
         return;
       }
 
-      // Create marker: violet for current user, blue for others
+      // Create marker: use profile picture if available, else colored circle
       const el = document.createElement('div');
-      el.style.width = '10px';
-      el.style.height = '10px';
-      el.style.backgroundColor = (currentUser && u.user_id === currentUser.id) ? 'violet' : 'blue';
+      const isCurrentUser = currentUser && u.user_id === currentUser.id;
+      el.style.width = isCurrentUser ? '32px' : '24px';
+      el.style.height = isCurrentUser ? '32px' : '24px';
       el.style.borderRadius = '50%';
-      el.style.border = '2px solid white';
+      el.style.border = isCurrentUser ? '3px solid #fff' : '2px solid #fff';
+      el.style.boxShadow = isCurrentUser ? '0 0 8px #4285F4' : '0 0 4px #aaa';
+      el.style.backgroundColor = '#fff';
+      el.style.overflow = 'hidden';
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+
+      const avatarUrl = u.profiles?.[0]?.avatar_url;
+      if (avatarUrl) {
+        const img = document.createElement('img');
+        img.src = avatarUrl;
+        img.alt = 'User';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '50%';
+        el.appendChild(img);
+      } else {
+        el.style.backgroundColor = isCurrentUser ? '#4285F4' : 'violet';
+      }
 
       const name = u.profiles?.[0]?.name || "User";
       const type = u.profiles?.[0]?.lesson_number || "N";
