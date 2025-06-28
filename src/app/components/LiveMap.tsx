@@ -28,12 +28,17 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
     if (mapRef.current) return;
     mapRef.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
+      style: 'mapbox://styles/mapbox/streets-v12',
       center: [78, 22],
       zoom: 2.2,
       attributionControl: false,
     });
     mapRef.current.addControl(new mapboxgl.NavigationControl());
+    mapRef.current.addControl(new mapboxgl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showUserHeading: true
+    }));
     return () => mapRef.current?.remove();
   }, []);
 
@@ -85,7 +90,7 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
       el.style.justifyContent = 'center';
 
       const avatarUrl = u.profiles?.[0]?.avatar_url;
-      if (avatarUrl) {
+      if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.trim() !== '') {
         const img = document.createElement('img');
         img.src = avatarUrl;
         img.alt = 'User';
@@ -93,6 +98,11 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
         img.style.height = '100%';
         img.style.objectFit = 'cover';
         img.style.borderRadius = '50%';
+        img.onerror = () => {
+          // fallback to colored circle if image fails to load
+          el.style.backgroundColor = isCurrentUser ? '#4285F4' : 'violet';
+          if (img.parentNode) img.parentNode.removeChild(img);
+        };
         el.appendChild(img);
       } else {
         el.style.backgroundColor = isCurrentUser ? '#4285F4' : 'violet';

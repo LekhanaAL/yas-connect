@@ -8,7 +8,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <title>YAS Connect</title>
         <meta name="theme-color" content="#FFD600" />
       </head>
-      <body style={{ background: '#fff', color: '#1A2A4F', fontFamily: 'sans-serif' }}>
+      <body style={{ background: '#f7fafc', color: '#1A2A4F', fontFamily: 'Inter, Arial, sans-serif' }}>
         <Navbar />
         {children}
       </body>
