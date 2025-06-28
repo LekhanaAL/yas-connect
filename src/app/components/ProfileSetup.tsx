@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
+import Image from 'next/image';
 
 interface ProfileSetupProps {
   user: User;
@@ -30,14 +31,21 @@ export default function ProfileSetup({ user, onComplete }: ProfileSetupProps) {
     setError('');
     setLoading(true);
     setSuccess(false);
+    if (!avatarFile || !(avatarFile instanceof File)) {
+      setError('Please select a valid image file.');
+      setLoading(false);
+      return;
+    }
+    console.log('Uploading avatar file:', avatarFile, avatarFile instanceof File);
     let uploadedAvatarUrl = avatarUrl;
     if (avatarFile) {
       const fileExt = avatarFile.name.split('.').pop();
-      const filePath = `avatars/${user.id}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, avatarFile, { upsert: true });
-      if (uploadError) {
-        setError('Failed to upload avatar.');
+      const filePath = `${user.id}.${fileExt}`;
+      const uploadResponse = await supabase.storage.from('avatars').upload(filePath, avatarFile, { upsert: true });
+      if (uploadResponse.error) {
+        setError('Failed to upload avatar: ' + uploadResponse.error.message);
         setLoading(false);
+        console.error('Supabase upload error:', uploadResponse.error, uploadResponse);
         return;
       }
       const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
@@ -70,7 +78,14 @@ export default function ProfileSetup({ user, onComplete }: ProfileSetupProps) {
         <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ marginTop: 8 }} />
       </label>
       {avatarFile && (
-        <img src={URL.createObjectURL(avatarFile)} alt="Preview" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', margin: '8px auto' }} />
+        <Image
+          src={URL.createObjectURL(avatarFile)}
+          alt="Preview"
+          width={64}
+          height={64}
+          style={{ borderRadius: '50%', objectFit: 'cover', margin: '8px auto' }}
+          unoptimized
+        />
       )}
       <div aria-live="polite" style={{ minHeight: 32, margin: '8px 0' }}>
         {loading && <div className="loader" style={{ margin: '0 auto', display: 'block' }} aria-label="Saving..." />}

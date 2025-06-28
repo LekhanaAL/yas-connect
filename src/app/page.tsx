@@ -6,6 +6,7 @@ import ProfileSetup from './components/ProfileSetup';
 import LiveMap from './components/LiveMap';
 import LocationUpdater from './components/LocationUpdater';
 import { User } from '@supabase/supabase-js';
+import Image from 'next/image';
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -13,6 +14,60 @@ export default function HomePage() {
   const [consent, setConsent] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(true);
   const [consentChecked, setConsentChecked] = useState(false);
+
+  // Hero section
+  const heroSection = (
+    <section style={{
+      position: 'relative',
+      width: '100%',
+      minHeight: '60vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'url(/Lotus-Blue-Circular-2-_medium.fw_.png) center/cover no-repeat',
+      marginBottom: 32,
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        background: 'rgba(26, 42, 79, 0.45)',
+        zIndex: 1
+      }} />
+      <div style={{
+        position: 'relative',
+        zIndex: 2,
+        color: '#fff',
+        textAlign: 'center',
+        maxWidth: 700,
+        padding: 32,
+        borderRadius: 24,
+        background: 'rgba(26, 42, 79, 0.15)',
+        boxShadow: '0 4px 32px #0002',
+      }}>
+        <Image
+          src="/Lotus-Blue-Circular-2-_medium.fw_.png"
+          alt="Lotus Logo"
+          width={120}
+          height={120}
+          style={{ margin: '0 auto 16px auto', display: 'block' }}
+          priority
+        />
+        <h1 style={{ fontFamily: 'Lora, serif', fontWeight: 700, fontSize: 44, marginBottom: 16, letterSpacing: 1 }}>
+          Welcome to YAS Connect
+        </h1>
+        <p style={{ fontFamily: 'Lora, serif', fontSize: 22, fontStyle: 'italic', marginBottom: 16 }}>
+          &quot;You realize that all along there was something tremendous within you, and you did not know it.&quot;
+        </p>
+        <p style={{ fontFamily: 'Inter, Arial, sans-serif', fontSize: 18, marginBottom: 0 }}>
+          — Paramahansa Yogananda
+        </p>
+      </div>
+    </section>
+  );
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data?.user || null));
@@ -28,7 +83,12 @@ export default function HomePage() {
       .then(({ data }) => setProfileComplete(!!data));
   }, [user]);
 
-  if (!user) return <AuthForm onAuth={setUser} />;
+  if (!user) return <>
+    {heroSection}
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: '40vh', marginTop: -150 }}>
+      <AuthForm onAuth={setUser} />
+    </div>
+  </>;
   if (!profileComplete) return <ProfileSetup user={user} onComplete={() => setProfileComplete(true)} />;
   if (!consent) return (
     <div style={{
