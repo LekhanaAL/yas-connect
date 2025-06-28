@@ -41,11 +41,11 @@ export default function ProfileSetup({ user, onComplete }: ProfileSetupProps) {
     if (avatarFile) {
       const fileExt = avatarFile.name.split('.').pop();
       const filePath = `${user.id}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, avatarFile, { upsert: true });
-      if (uploadError) {
-        setError('Failed to upload avatar: ' + uploadError.message);
+      const uploadResponse = await supabase.storage.from('avatars').upload(filePath, avatarFile, { upsert: true });
+      if (uploadResponse.error) {
+        setError('Failed to upload avatar: ' + uploadResponse.error.message);
         setLoading(false);
-        console.error('Supabase upload error:', uploadError);
+        console.error('Supabase upload error:', uploadResponse.error, uploadResponse);
         return;
       }
       const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath);

@@ -122,7 +122,6 @@ export default function HomePage() {
   );
   return (
     <>
-      {heroSection}
       <LocationUpdater user={user} />
       <LiveMap currentUser={user} />
     </>
