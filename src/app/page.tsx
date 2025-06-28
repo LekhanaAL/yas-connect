@@ -85,7 +85,7 @@ export default function HomePage() {
 
   if (!user) return <>
     {heroSection}
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: '40vh', marginTop: -200 }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: '40vh', marginTop: -150 }}>
       <AuthForm onAuth={setUser} />
     </div>
   </>;

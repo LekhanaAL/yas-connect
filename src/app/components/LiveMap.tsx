@@ -28,10 +28,11 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
     if (mapRef.current) return;
     mapRef.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: 'mapbox://styles/lekhanaal/cmcf7yz3z04x701qw7a2vhr59',
       center: [78, 22],
       zoom: 2.2,
       attributionControl: false,
+      projection: 'mercator',
     });
     mapRef.current.addControl(new mapboxgl.NavigationControl());
     mapRef.current.addControl(new mapboxgl.GeolocateControl({
@@ -75,7 +76,7 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
         return;
       }
 
-      // Create marker: use profile picture if available, else colored circle
+      // Create marker: always use colored circle, no profile image
       const el = document.createElement('div');
       const isCurrentUser = currentUser && u.user_id === currentUser.id;
       el.style.width = isCurrentUser ? '32px' : '24px';
@@ -83,29 +84,18 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
       el.style.borderRadius = '50%';
       el.style.border = isCurrentUser ? '3px solid #fff' : '2px solid #fff';
       el.style.boxShadow = isCurrentUser ? '0 0 8px #4285F4' : '0 0 4px #aaa';
-      el.style.backgroundColor = '#fff';
+      el.style.backgroundColor = isCurrentUser ? '#4285F4' : 'violet';
       el.style.overflow = 'hidden';
       el.style.display = 'flex';
       el.style.alignItems = 'center';
       el.style.justifyContent = 'center';
 
-      const avatarUrl = u.profiles?.[0]?.avatar_url;
-      if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.trim() !== '') {
-        const img = document.createElement('img');
-        img.src = avatarUrl;
-        img.alt = 'User';
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '50%';
-        img.onerror = () => {
-          // fallback to colored circle if image fails to load
-          el.style.backgroundColor = isCurrentUser ? '#4285F4' : 'violet';
-          if (img.parentNode) img.parentNode.removeChild(img);
-        };
-        el.appendChild(img);
-      } else {
-        el.style.backgroundColor = isCurrentUser ? '#4285F4' : 'violet';
+      // Log for debugging
+      console.log('Adding marker:', u, 'Lat:', u.latitude, 'Lng:', u.longitude, 'Element:', el);
+
+      if (!(el instanceof HTMLElement)) {
+        console.error('Marker element is not a valid HTMLElement:', el, u);
+        return;
       }
 
       const name = u.profiles?.[0]?.name || "User";
@@ -115,13 +105,15 @@ export default function LiveMap({ currentUser }: { currentUser: User | null }) {
         .setHTML(`<strong>${name}</strong><br>${type}`);
 
       try {
-        const marker = new mapboxgl.Marker({ element: el })
-          .setLngLat([u.longitude, u.latitude])
-          .setPopup(popup)
-          .addTo(map);
-        markers.push(marker);
+        if (map && el) {
+          const marker = new mapboxgl.Marker({ element: el })
+            .setLngLat([u.longitude, u.latitude])
+            .setPopup(popup)
+            .addTo(map);
+          markers.push(marker);
+        }
       } catch (err) {
-        console.error('Error adding marker:', err);
+        console.error('Error adding marker:', err, u, el);
       }
     });
 
