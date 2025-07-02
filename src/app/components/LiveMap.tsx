@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '../lib/supabaseClient';
 import UserMarker from './UserMarker';
 
@@ -49,7 +48,19 @@ export default function LiveMap() {
       }
     };
     fetchUsers();
-    // Optionally, subscribe to realtime updates here
+
+    // Subscribe to realtime updates on the locations table
+    const channel = supabase
+      .channel('public:locations')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'locations' }, (payload) => {
+        // Refetch all users on any change (simplest, most robust way)
+        fetchUsers();
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
