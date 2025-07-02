@@ -13,12 +13,15 @@ export default function LocationUpdater({ user }: LocationUpdaterProps) {
     let watchId: number | undefined;
     const updateLocation = async (position: GeolocationPosition) => {
       const { latitude, longitude } = position.coords;
-      await supabase.from('locations').upsert({
-        user_id: user.id,
-        latitude,
-        longitude,
-        updated_at: new Date().toISOString()
-      });
+      await supabase.from('locations').upsert(
+        {
+          user_id: user.id,
+          latitude,
+          longitude,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'user_id' }
+      );
     };
     if ('geolocation' in navigator) {
       watchId = navigator.geolocation.watchPosition(updateLocation);

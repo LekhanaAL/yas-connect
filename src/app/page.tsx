@@ -123,7 +123,7 @@ export default function HomePage() {
   return (
     <>
       <LocationUpdater user={user} />
-      <LiveMap currentUser={user} />
+      <LiveMap />
     </>
   );
 }
