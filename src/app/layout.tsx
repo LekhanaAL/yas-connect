@@ -1,4 +1,3 @@
-import 'mapbox-gl/dist/mapbox-gl.css';
 import Navbar from './components/Navbar';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -128,6 +128,29 @@ export interface Database {
           expires_at?: string | null
         }
       }
+      locations: {
+        Row: {
+          user_id: string;
+          latitude: number;
+          longitude: number;
+          city: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          latitude: number;
+          longitude: number;
+          city?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          latitude?: number;
+          longitude?: number;
+          city?: string | null;
+          updated_at?: string;
+        };
+      };
     }
     Views: {
       [_ in never]: never
