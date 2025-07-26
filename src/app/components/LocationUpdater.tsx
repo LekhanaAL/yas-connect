@@ -25,15 +25,16 @@ export default function LocationUpdater({ user }: LocationUpdaterProps) {
       } catch (e) {
         console.warn('Reverse geocoding failed', e);
       }
+      console.log('user.id:', user.id, typeof user.id); // Debug: print user id and type
       await supabase.from('locations').upsert(
         {
-          user_id: user.id,
+          user_id: user.id, // changed from uuid to user_id
           latitude,
           longitude,
           city, // new field
           updated_at: new Date().toISOString()
         },
-        { onConflict: 'user_id' }
+        { onConflict: 'user_id' } // changed from uuid to user_id
       );
     };
     if ('geolocation' in navigator) {
