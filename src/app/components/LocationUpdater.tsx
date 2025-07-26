@@ -13,36 +13,15 @@ export default function LocationUpdater({ user }: LocationUpdaterProps) {
     let watchId: number | undefined;
     const updateLocation = async (position: GeolocationPosition) => {
       const { latitude, longitude } = position.coords;
-      console.log('Updating location:', latitude, longitude);
-      // Reverse geocode to get city name
-      let city = '';
-      try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`);
-        if (response.ok) {
-          const data = await response.json();
-          city = data.address?.city || data.address?.town || data.address?.village || data.address?.state || '';
-        }
-      } catch (e) {
-        console.warn('Reverse geocoding failed', e);
-      }
-      console.log('user.id:', user.id, typeof user.id); // Debug: print user id and type
-      await supabase.from('locations').upsert(
-        {
-          user_id: user.id, // changed from uuid to user_id
-          latitude,
-          longitude,
-          city, // new field
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: 'user_id' } // changed from uuid to user_id
-      );
+      await supabase.from('locations').upsert({
+        user_id: user.id,
+        latitude,
+        longitude,
+        updated_at: new Date().toISOString()
+      });
     };
     if ('geolocation' in navigator) {
-      watchId = navigator.geolocation.watchPosition(updateLocation, undefined, {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 10000
-      });
+      watchId = navigator.geolocation.watchPosition(updateLocation);
     }
     return () => {
       if (watchId !== undefined) navigator.geolocation.clearWatch(watchId);
